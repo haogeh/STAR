@@ -237,7 +237,7 @@ def process(input_image):
 if __name__ == '__main__':
     # face detector
     # could be downloaded in this repo: https://github.com/italojs/facial-landmarks-recognition/tree/master
-    predictor_path = '/path/to/shape_predictor_68_face_landmarks.dat'
+    predictor_path = '../shape_predictor_68_face_landmarks.dat'
     detector = dlib.get_frontal_face_detector()
     sp = dlib.shape_predictor(predictor_path)
 
@@ -245,7 +245,7 @@ if __name__ == '__main__':
     args = argparse.Namespace()
     args.config_name = 'alignment'
     # could be downloaded here: https://drive.google.com/file/d/1aOx0wYEZUfBndYy_8IYszLPG_D2fhxrT/view
-    model_path = '/path/to/WFLW_STARLoss_NME_4_02_FR_2_32_AUC_0_605.pkl'
+    model_path = 'pretrained_models'
     device_ids = '0'
     device_ids = list(map(int, device_ids.split(",")))
     alignment = Alignment(args, model_path, dl_framework="pytorch", device_ids=device_ids)
@@ -253,7 +253,7 @@ if __name__ == '__main__':
     # image:      input image
     # image_draw: draw the detected facial landmarks on image
     # results:    a list of detected facial landmarks
-    face_file_path = '/path/to/face/image/bald_guys.jpg'
+    face_file_path = '../images/indoor_006.png'
     image = cv2.imread(face_file_path)
     image_draw, results = process(image)
 

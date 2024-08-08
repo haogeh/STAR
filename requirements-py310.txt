@@ -18,3 +18,7 @@ scikit-image==0.21.0
 # wandb==0.10.25
 # https://pytorch.org/get-started/previous-versions/
 # pip install torch==1.6.0+cpu torchvision==0.7.0+cpu -f https://download.pytorch.org/whl/torch_stable.html
+scipy==1.9
+dlib
+gradio
+ipywidgets
