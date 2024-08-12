@@ -1,6 +1,10 @@
 .venv
 .DS_Store
 .python-version
+.vscode
+pub_annot
+pub_dataset
+output
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
