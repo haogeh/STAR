@@ -119,3 +119,10 @@ Please consider citing our papers in your publications if the project helps your
 ## Acknowledgments
 This repository is built on top of [ADNet](https://github.com/huangyangyu/ADNet). 
 Thanks for this strong baseline.
+
+
+For ibug dataset, run the following:
+```shell
+mv ibug/image_092\ _01.jpg ibug/image_092_01.jpg
+mv ibug/image_092\ _01.pts ibug/image_092_01.pts
+```
