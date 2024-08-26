@@ -311,6 +311,6 @@ class AlignmentDataset(Dataset):
         img[2, :, :] = (img[2, :, :] - self.means[2]) * self.scale
         sample["data"] = torch.from_numpy(img)  # CHW, BGR, [-1, 1]
 
-        sample["tags"] = tags
+        sample["tags"] = tags.astype(np.float32)
 
         return sample

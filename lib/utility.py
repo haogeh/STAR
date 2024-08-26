@@ -304,7 +304,7 @@ def forward_backward(config, train_loader, net_module, net, net_ema, criterions,
         last_time = convert_secs2time(train_model_time.avg * (iter_num - iter - 1), True)
         if iter % config.display_iteration == 0 or iter + 1 == len(train_loader):
             if config.logger is not None:
-                losses_str = ' Average Loss: {:.6f}'.format(sum(losses) / len(losses))
+                losses_str = ' Average Loss: {:.6f}, Sum Loss: {:.6f}'.format(sum(losses) / len(losses),sum_loss)
                 for k, loss in enumerate(losses):
                     losses_str += ', L{}: {:.3f}'.format(k, loss)
                 config.logger.info(
