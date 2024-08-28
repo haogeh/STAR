@@ -19,8 +19,8 @@ class NME:
 
     def test(self, label_pd, label_gt):
         nme_list = []
-        label_pd = label_pd.data.cpu().numpy()
-        label_gt = label_gt.data.cpu().numpy()
+        # label_pd = label_pd.data.cpu().numpy()
+        # label_gt = label_gt.data.cpu().numpy()
 
         for i in range(label_gt.shape[0]):
             landmarks_gt = label_gt[i]
@@ -28,12 +28,14 @@ class NME:
             if isinstance(self.nme_right_index, list):
                 norm_distance = self.get_norm_distance(landmarks_gt)
             elif isinstance(self.nme_right_index, int):
-                norm_distance = np.linalg.norm(landmarks_gt[self.nme_left_index] - landmarks_gt[self.nme_right_index])
+                # norm_distance = np.linalg.norm(landmarks_gt[self.nme_left_index] - landmarks_gt[self.nme_right_index])
+                norm_distance = torch.norm(landmarks_gt[self.nme_left_index] - landmarks_gt[self.nme_right_index])
             else:
                 raise NotImplementedError
             landmarks_delta = landmarks_pv - landmarks_gt
-            nme = (np.linalg.norm(landmarks_delta, axis=1) / norm_distance).mean()
+            # nme = (np.linalg.norm(landmarks_delta, axis=1) / norm_distance).mean()
+            nme = (torch.norm(landmarks_delta, dim=1) / norm_distance).mean()
             nme_list.append(nme)
             # sum_nme += nme
             # total_cnt += 1
-        return nme_list
+        return torch.tensor(nme_list)

@@ -1,6 +1,6 @@
 import numpy as np
 from scipy.integrate import simps
-
+import torch
 
 class FR_AUC:
     def __init__(self, data_definition):
@@ -18,8 +18,14 @@ class FR_AUC:
             thres = self.thresh
 
         num_data = len(nmes)
-        xs = np.arange(0, thres + step, step)
-        ys = np.array([np.count_nonzero(nmes <= x) for x in xs]) / float(num_data)
-        fr = 1.0 - ys[-1]
-        auc = simps(ys, x=xs) / thres
+        # xs = np.arange(0, thres + step, step)
+        # ys = np.array([np.count_nonzero(nmes <= x) for x in xs]) / float(num_data)
+        # fr = 1.0 - ys[-1]
+        # auc = simps(ys, x=xs) / thres
+
+        xs = torch.arange(0, thres + step, step)
+        ys = torch.tensor([(nmes <= x).float().sum().item() for x in xs]) / float(num_data)
+        fr = 1.0 - ys[-1].item()
+        auc = torch.trapz(ys, xs).item() / thres
+
         return [round(fr, 4), round(auc, 6)]
