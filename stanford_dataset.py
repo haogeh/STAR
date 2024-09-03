@@ -72,33 +72,26 @@ accessory = layers[[3,4,5,6,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25]]
 dots = layers[2:]
 
 # %%
-ctrs = []
-for dot in layers:
-    ctr = get_ctr(dot.bbox)
-    ctrs.append(ctr)
-ctrs = np.array(ctrs)
+def get_iris_points(iris):
+    ctr = get_ctr(iris.bbox)
+    d = iris.size[0]
+    iris_dots = np.zeros((2,2))
+    iris_dots[:,1] = ctr[1]
+    iris_dots[0,0] = ctr[0] - d / 2
+    iris_dots[1,0] = ctr[0] + d / 2 
+    return iris_dots
 
 # %%
-iris = irises[0]
-ctr = ctrs[0]
-d = iris.size[0]
-iris_dots = np.zeros((2,2))
-iris_dots[:,1] = ctr[1]
-iris_dots[0,0] = ctr[0] - d / 2
-iris_dots[1,0] = ctr[0] + d / 2 
-
-plt.figure(figsize=(10,10),dpi=200)
-h,w,c = psd[0].numpy().shape
-plt.imshow(psd[0].numpy())
-plt.scatter(ctr[0], ctr[1], c='r', s=3)
-plt.scatter(iris_dots[:,0], iris_dots[:,1], c='g', s=3)
+points = np.zeros((28,2))
+points[:2] = get_iris_points(irises[0])
+points[2:4] = get_iris_points(irises[1])
+points[4:] = np.array([get_ctr(layer.bbox) for layer in layers[2:]])
 
 # %%
 plt.figure(figsize=(10,10),dpi=200)
 h,w,c = psd[0].numpy().shape
 plt.imshow(psd[0].numpy())
-plt.scatter(ctrs[:,0], ctrs[:,1], c='r', s=3)
-
+plt.scatter(points[:,0], points[:,1], c='r', s=3)
 # plt.scatter(cardinal[:,0], cardinal[:,1], c='b', s=1)
 # plt.scatter(accessory[:,0], accessory[:,1], c='g', s=1)
 
