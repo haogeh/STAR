@@ -8,6 +8,8 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 from psd_tools import PSDImage
+from sklearn.model_selection import train_test_split
+from torch.utils.data import Dataset, DataLoader
 
 # %%
 def generate_annotation_line(path, points_5pt, points, scale, center_w, center_h):
@@ -30,10 +32,11 @@ class Data_Config:
             self.data_definition = "stanford"
             
             self.train_tsv_file = 'stanford_dataset/annot/train.tsv'
-            self.val_tsv_file = None
+            self.val_tsv_file = 'stanford_dataset/annot/val.tsv'
+            self.test_tsv_file = 'stanford_dataset/annot/test.tsv'
             self.raw_psd_dir = 'stanford_dataset/psd'
             self.train_pic_dir = 'stanford_dataset/image'
-            self.val_pic_dir = None
+            self.val_pic_dir = 'stanford_dataset/image'
             self.loader_type = 'alignment'
             self.batch_size = 16
             self.val_batch_size = 32
@@ -71,15 +74,26 @@ data_config = Data_Config()
 psd_files = [file for file in os.listdir(data_config.raw_psd_dir) if file.endswith('.psd')]
 annotation_lines = []
 # %%
+def get_ctr(bbox):
+    return (bbox[0] + bbox[2]) / 2 , (bbox[1] + bbox[3]) / 2
+
+# %%
+def get_iris_points(iris):
+    ctr = get_ctr(iris.bbox)
+    d = iris.size[0]
+    iris_dots = np.zeros((2,2))
+    iris_dots[:,1] = ctr[1]
+    iris_dots[0,0] = ctr[0] - d / 2
+    iris_dots[1,0] = ctr[0] + d / 2 
+    return iris_dots
+
+# %%
 # psd_file = psd_files[1]
 for psd_file in psd_files:
     psd = PSDImage.open(os.path.join(data_config.raw_psd_dir, psd_file))
     image = psd[0].numpy()
-    # %%
-    def get_ctr(bbox):
-        return (bbox[0] + bbox[2]) / 2 , (bbox[1] + bbox[3]) / 2
 
-    # %%
+
     layers = []
     for layer in psd:
         if layer.kind == 'shape':
@@ -91,17 +105,6 @@ for psd_file in psd_files:
     accessory = layers[[3,4,5,6,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25]]
     dots = layers[2:]
 
-    # %%
-    def get_iris_points(iris):
-        ctr = get_ctr(iris.bbox)
-        d = iris.size[0]
-        iris_dots = np.zeros((2,2))
-        iris_dots[:,1] = ctr[1]
-        iris_dots[0,0] = ctr[0] - d / 2
-        iris_dots[1,0] = ctr[0] + d / 2 
-        return iris_dots
-
-    # %%
     points = np.zeros((28,2))
     iris_left_points = get_iris_points(irises[0])
     iris_right_points = get_iris_points(irises[1])
@@ -118,8 +121,6 @@ for psd_file in psd_files:
     points_5pt[3] = points[24]
     points_5pt[4] = points[25]
 
-
-    # %%
     predictor_path = '../shape_predictor_68_face_landmarks.dat'
     detector = dlib.get_frontal_face_detector()
     sp = dlib.shape_predictor(predictor_path)
@@ -141,11 +142,13 @@ for psd_file in psd_files:
         center_h = (y2 + y1) / 2
 
         scale, center_w, center_h = float(scale), float(center_w), float(center_h)
+        if scale > 5:
+            break
         print(f"scale: {scale}, center_w: {center_w}, center_h: {center_h}")
 
-    # %%
     plt.figure(figsize=(10,10),dpi=200)
     h,w,c = image.shape
+    print(f"Image name: {psd_file}")
     plt.imshow(image)
     # plt.scatter(points[:,0], points[:,1], c='r', s=3)
     # colors = ['r', 'g', 'b', 'c', 'm', 'y', 'k']
@@ -162,13 +165,11 @@ for psd_file in psd_files:
     # plt.scatter(cardinal[:,0], cardinal[:,1], c='b', s=1)
     # plt.scatter(accessory[:,0], accessory[:,1], c='g', s=1)
 
-
-    # %%
-    mrn,dsc = re.match(r'MRN(\d+)_DSC_?(\d+)', psd_file).groups()
+    mrn,dsc = re.match(r'MRN ?(\d+)_DSC_?(\d+)', psd_file).groups()
     image_name = f"MRN{mrn}_DSC{dsc}.jpg"
     image_path = os.path.join(data_config.train_pic_dir, image_name)
     annotation_line = generate_annotation_line(image_name, points_5pt, points, scale, center_w, center_h)
-    # cv2.imwrite(image_path, cv2.cvtColor(image, cv2.COLOR_RGB2BGR))
+    cv2.imwrite(image_path, cv2.cvtColor(image, cv2.COLOR_RGB2BGR))
     annotation_lines.append(annotation_line)
     # %%
     # Plot the Cardinal Line
@@ -187,8 +188,20 @@ for psd_file in psd_files:
 
     # plt.plot(x_range, y_range, 'r-', linewidth=0.3)
     # plt.plot([x1,x2], [y1,y2], 'r-', linewidth=0.3)
+
+# %%
+
+from sklearn.model_selection import train_test_split
+# Split the data into train, validation, and test sets
+train_lines, test_lines = train_test_split(annotation_lines, test_size=0.2, random_state=42)
+train_lines, val_lines = train_test_split(train_lines, test_size=0.125, random_state=42)  # 0.125 * 0.8 = 0.1
+
 # %%
 with open(data_config.train_tsv_file, 'w') as f:
-    f.write("\n".join(annotation_lines))
-# %%
-# Dataloader
+    f.write("\n".join(train_lines))
+
+with open(data_config.val_tsv_file, 'w') as f:
+    f.write("\n".join(val_lines))
+
+with open(data_config.test_tsv_file, 'w') as f:
+    f.write("\n".join(test_lines))
